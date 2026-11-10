@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, ArrowUpRight, CalendarDays, Compass, Edit3, MapPin, Plus, Wallet } from 'lucide-react';
+import { ArrowUpRight, CalendarDays, Compass, Edit3, MapPin, Plus, Wallet } from 'lucide-react';
 import { Link } from 'react-router';
 import { getDateRange, formatPlanRange, readTripPlans } from './tripPlans';
 import type { TripPlan } from '../../features/trips/types';
