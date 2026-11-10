@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700;800&family=Kalam:wght@400;700&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -5,7 +6,71 @@
   --font-mono: "DM Mono", monospace;
 }
 
-:root { font-family: var(--font-sans); color: #252923; background: #f8f8f6; font-synthesis: none; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; font-optical-sizing: auto; font-weight: 400; scroll-behavior: smooth; }
+:root {
+  --font-sans: "DM Sans", "Noto Sans SC", sans-serif;
+  --font-display: "Kalam", var(--font-sans);
+  --font-mono: "DM Mono", monospace;
+  --color-text-primary: #202a30;
+  --color-text-secondary: #526069;
+  --color-text-muted: #73818a;
+  --color-border: #dce9eb;
+  --color-surface: #f5fafbe6;
+  --color-accent: #f0abe0;
+  --color-accent-hover: #f5bde8;
+  --color-accent-ink: #8c6d88;
+  --color-focus: #83b9c7;
+  --color-focus-ring: #83b9c733;
+  --text-7: 7px;
+  --text-8: 8px;
+  --text-9: 9px;
+  --text-10: 10px;
+  --text-11: 11px;
+  --text-12: 12px;
+  --text-13: 13px;
+  --text-14: 14px;
+  --text-15: 15px;
+  --text-16: 16px;
+  --text-17: 17px;
+  --text-18: 18px;
+  --text-19: 19px;
+  --text-20: 20px;
+  --text-21: 21px;
+  --text-23: 23px;
+  --text-24: 24px;
+  --text-25: 25px;
+  --text-26: 26px;
+  --text-27: 27px;
+  --text-28: 28px;
+  --text-29: 29px;
+  --text-30: 30px;
+  --text-31: 31px;
+  --text-34: 34px;
+  --text-35: 35px;
+  --text-36: 36px;
+  --text-38: 38px;
+  --text-39: 39px;
+  --text-42: 42px;
+  --text-45: 45px;
+  --text-48: 48px;
+  --text-50: 50px;
+  --text-54: 54px;
+  --text-58: 58px;
+  --text-62: 62px;
+  --text-64: 64px;
+  --text-68: 68px;
+  --text-70: 70px;
+  --text-72: 72px;
+  --text-76: 76px;
+  font-family: var(--font-sans);
+  color: var(--color-text-primary);
+  background: #f8f8f6;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  scroll-behavior: smooth;
+}
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 350px; }
 a { color: inherit; text-decoration: none; }

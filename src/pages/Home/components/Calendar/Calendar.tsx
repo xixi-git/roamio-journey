@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ArrowLeft, ArrowRight, CalendarDays, ChevronDown } from 'lucide-react';
-import { parseTripDate, type Trip } from '../../trips';
+import { parseTripDate } from '../../../../features/trips/model';
+import type { Trip } from '../../../../features/trips/types';
 import './Calendar.css';
 
 const getTripYears = (trips: Trip[]) => [...new Set(trips.flatMap(({ start, end }) => [start, end].map((date) => Number(date.slice(0, 4)))))].sort((a, b) => a - b);

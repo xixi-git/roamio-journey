@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ArrowLeft, ArrowRight, ArrowUpRight, Clock3 } from 'lucide-react';
-import { formatTripRange, type Trip } from '../../trips';
+import { isTripPast, formatTripRange } from '../../../../features/trips/model';
+import type { Trip } from '../../../../features/trips/types';
 
 
-export default function HomeMap({ trips }: { trips: Trip[] }) {
+export default function HomeHistory({ trips }: { trips: Trip[] }) {
   const [active, setActive] = useState(0);
-  const previousTrips = trips;
-  console.log(trips)
+  const previousTrips = useMemo(() => {
+    return trips.filter((trip) => isTripPast(trip)).sort((a, b) => b.start.localeCompare(a.start)).slice(0, 5);
+  }, [trips]);
   const go = (amount: number) => {
     if (previousTrips.length) setActive((current) => (current + amount + previousTrips.length) % previousTrips.length);
   };

@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import { ChevronDown, Globe2, Minus, Plus } from 'lucide-react';
 import { ComposableMap, Geography, Geographies, Marker } from 'react-simple-maps/core';
 import { ZoomableGroup } from 'react-simple-maps/zoom';
-import { getLocalToday, isTripPast, parseTripDate, type Trip } from '../../trips';
+import { getLocalToday, isTripPast, parseTripDate } from '../../../../features/trips/model';
+import type { Trip } from '../../../../features/trips/types';
 import './Map.css';
 
 const GEOGRAPHY_URL = '/world/countries-110m.json';

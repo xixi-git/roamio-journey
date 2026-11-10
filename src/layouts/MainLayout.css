@@ -1,0 +1,8 @@
+.site-layout {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #a7d9eb 0, #e7f2f5 180px, #f4f8f7 520px);
+}
+
+.site-main {
+  min-height: calc(100vh - 72px);
+}
