@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { ArrowUpRight, CalendarDays, Compass, Edit3, MapPin, Plus, Wallet } from 'lucide-react';
+import { ArrowUpRight, CalendarDays, Compass, Trash, Edit3, MapPin, Plus, Wallet } from 'lucide-react';
+import { toast } from "sonner";
 import { Link } from 'react-router';
 import { getDateRange, formatPlanRange, readTripPlans } from './tripPlans';
 import type { TripPlan } from '../../features/trips/types';
@@ -32,15 +33,34 @@ export default function MyTrips() {
 
   const upcomingCount = plans.filter((plan) => planStatus(plan) === 'Upcoming').length;
 
+
+  const copyLink = async (city: string) => {
+    try {
+
+      const shareUrl = window.location.href + '/seed-' + city.toLowerCase() + '/edit';
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success("Copied!", {
+        description: "Invite friends to join your travel plan.",
+      });
+    } catch (error) {
+      console.error("Failed to copy link:", error);
+      toast.error("Something went wrong", {
+        description: "Failed to copy the link. Please try again.",
+      })
+    }
+  };
+
+
+
   return (
     <div className="trip-page trips-list-page">
       <div className="trip-page-inner">
         {/* <Link className="trip-back" to="/"><ArrowLeft />Home</Link> */}
         <header className="trips-list-heading">
           <div>
-            <span className="trip-eyebrow"><Compass />YOUR TRAVEL NOTEBOOK</span>
+            <span className="trip-eyebrow"><Compass />MY TRAVEL NOTEBOOK</span>
             <h1>My Trips<span>.</span></h1>
-            <p>Keep the plans, the reasons, and the little details that make a trip yours.</p>
+            <p>Keep the plans, the reasons, and the little details that make a trip.</p>
           </div>
           <Link className="trip-button" to="/trips/new"><Plus />Plan a new trip</Link>
         </header>
@@ -48,30 +68,34 @@ export default function MyTrips() {
         <div className="trips-summary">
           <div><strong>{plans.length}</strong><span>Trips saved</span></div>
           <div><strong>{upcomingCount}</strong><span>Still ahead</span></div>
-          <p>Good plans make room for wonder. You can change every detail as you go.</p>
+          <p>Good plans make room for wonder</p>
         </div>
 
         {plans.length ? (
           <section className="trip-card-grid" aria-label="Saved trips">
             {plans.map((plan) => {
               const status = planStatus(plan);
-              const inspirations = plan.inspirations.filter((item) => item.locationName || item.imageUrl);
+              // const inspirations = plan.inspirations.filter((item) => item.locationName || item.imageUrl);
               const dayCount = getDateRange(plan.start, plan.end).length;
               return (
                 <article className="saved-trip-card" key={plan.id}>
+                  { status !== 'Completed' && <ArrowUpRight className="saved-trip-open" onClick={()=>copyLink(plan.city)} />}
                   <Link className="saved-trip-image" to={`/trips/${plan.id}`} style={plan.coverImage ? { backgroundImage: `linear-gradient(180deg, transparent 35%, #18201bbb 100%), url("${plan.coverImage}")` } : undefined}>
                     {!plan.coverImage && <span className="saved-trip-image-placeholder"><MapPin /></span>}
                     <span className={`trip-status ${status.toLowerCase().replace(' ', '-')}`}>{status}</span>
-                    <ArrowUpRight className="saved-trip-open" />
                     <span className="saved-trip-image-title"><strong>{plan.city || 'Untitled destination'}</strong><small>{plan.country}</small></span>
                   </Link>
                   <div className="saved-trip-body">
                     <div className="saved-trip-dates"><CalendarDays />{formatPlanRange(plan.start, plan.end)}</div>
                     <div className="saved-trip-meta"><span>{dayCount} days</span>{plan.budget !== null && <span><Wallet />${plan.budget.toLocaleString()}</span>}</div>
                     {plan.summary && <p className="saved-trip-summary">{plan.summary}</p>}
-                    {!!inspirations.length && <div className="saved-trip-inspirations">{inspirations.slice(0, 3).map((item) => <span key={item.id}>{item.locationName}</span>)}</div>}
+                    {/* {!!inspirations.length && <div className="saved-trip-inspirations">{inspirations.slice(0, 3).map((item) => <span key={item.id}>{item.locationName}</span>)}</div>} */}
                     <div className="saved-trip-tags">{plan.tags.slice(0, 3).map((tag) => <span key={tag}>{tag}</span>)}</div>
-                    <div className="saved-trip-links"><Link className="saved-trip-details" to={`/trips/${plan.id}`}>View trip <ArrowUpRight /></Link><Link className="saved-trip-edit" to={`/trips/${plan.id}/edit`}><Edit3 />Edit</Link></div>
+                    <div className="saved-trip-links"><Link className="saved-trip-details" to={`/trips/${plan.id}`}>View trip</Link>
+                      { status !== 'Completed' 
+                        ? <Link className="saved-trip-edit" to={`/trips/${plan.id}/edit`}><Edit3 />Edit</Link>
+                        : <Trash size={15} />}
+                    </div>
                   </div>
                 </article>
               );

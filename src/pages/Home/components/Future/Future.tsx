@@ -15,10 +15,10 @@ export default function HomeFuture({ trips }: { trips: Trip[] }) {
     <section className="home-panel future-panel">
         <div className="future-title"><div><h2>{`${nextTrip.city}, ${nextTrip.country}`}</h2><span>{formatTripRange(nextTrip.start, nextTrip.end)}{nextTrip.budget ? ` · $${nextTrip.budget}` : ""}</span></div><Link aria-label="Edit trip" to={`/trips/${nextTrip.id}/edit`}><Edit /></Link></div>
         <div className="future-meta">
-            <div className="avatars">
+            {/* <div className="avatars">
                 <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=90&q=75" alt="Jenna"/>
                 <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=90&q=75" alt="Trip companion"/>
-            </div>
+            </div> */}
             <div className="interest-tags">
                 {
                     nextTrip.tags.length ? nextTrip.tags.map((tag) => {

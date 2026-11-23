@@ -39,6 +39,13 @@ export interface ItineraryDay {
   notes: string;
 }
 
+export interface TripReflection {
+  id: string;
+  body: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface TripPlan {
   id: string;
   city: string;
@@ -56,6 +63,7 @@ export interface TripPlan {
   tags: string[];
   inspirations: PlanInspiration[];
   itinerary: ItineraryDay[];
+  reflections?: TripReflection[];
   updatedAt: string;
 }
 

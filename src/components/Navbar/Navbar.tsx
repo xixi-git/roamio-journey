@@ -1,13 +1,6 @@
 import { Link, NavLink } from 'react-router';
+import { primaryNavigation } from '@/config/navigation';
 import './Navbar.css';
-
-const navItems = [
-  { to: '/', label: 'Home', end: true },
-  { to: '/trips', label: 'My Trips', end: false },
-  { to: '/explore', label: 'Explore', end: true },
-  { to: '/shared', label: 'Shared Trips', end: true },
-  { to: '/stats', label: 'Stats', end: true },
-];
 
 export default function Navbar() {
   return (
@@ -18,7 +11,7 @@ export default function Navbar() {
         </Link>
 
         <nav className="site-nav" aria-label="Main navigation">
-          {navItems.map(({ to, label, end }) => (
+          {primaryNavigation.map(({ to, label, end }) => (
             <NavLink key={to} to={to} end={end} className={({ isActive }) => isActive ? 'active' : undefined}>
               {label}
             </NavLink>

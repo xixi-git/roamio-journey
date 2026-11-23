@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ArrowLeft, ArrowRight, ArrowUpRight, Clock3 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Clock3 } from 'lucide-react';
 import { isTripPast, formatTripRange } from '../../../../features/trips/model';
 import type { Trip } from '../../../../features/trips/types';
 
@@ -38,7 +38,7 @@ export default function HomeHistory({ trips }: { trips: Trip[] }) {
               <span className="trip-card-content">
                 <span className="trip-card-name">{trip.city.toUpperCase()}</span>
                 <span className="trip-card-date">{formatTripRange(trip.start, trip.end)}</span>
-                <span className="trip-card-open"><ArrowUpRight /></span>
+                {/* <span className="trip-card-open"><ArrowUpRight /></span> */}
                 <span className="trip-card-tags">{trip.tags.map((tag) => <span key={tag}>{tag}</span>)}</span>
               </span>
             </button>

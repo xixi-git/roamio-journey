@@ -25,21 +25,14 @@ export const router = createBrowserRouter([
             },
           },
           {
-            path: 'explore',
+            path: 'map',
             lazy: async () => {
-              const { default: SectionPage } = await import('@/pages/Sections/SectionPage');
-              return { Component: SectionPage };
+              const { default: MapPage } = await import('@/pages/Map/MapPage');
+              return { Component: MapPage };
             },
           },
           {
             path: 'shared',
-            lazy: async () => {
-              const { default: SectionPage } = await import('@/pages/Sections/SectionPage');
-              return { Component: SectionPage };
-            },
-          },
-          {
-            path: 'stats',
             lazy: async () => {
               const { default: SectionPage } = await import('@/pages/Sections/SectionPage');
               return { Component: SectionPage };

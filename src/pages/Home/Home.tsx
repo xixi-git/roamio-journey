@@ -8,6 +8,7 @@ import History from './components/History/History';
 import HomeMap from './components/Map/Map';
 import { type Trip } from '../../features/trips/types';
 import { readTripPlans, toHomeTrip } from '../Trips/tripPlans';
+import { primaryNavigation } from '@/config/navigation';
 
 
 export default function Home() {
@@ -29,7 +30,7 @@ export default function Home() {
         <header className="dashboard-header">
           <Link className="Roamio-logo" to="/" aria-label="Roamio home">RO<span>A</span>MIO</Link>
           <nav className="dashboard-nav" aria-label="Main navigation">
-            <NavLink to="/" className={({ isActive }) => isActive ? 'selected' : undefined}>Home</NavLink><Link to="/trips">My Trips</Link><Link to="/explore">Explore</Link><Link to="/shared">Shared Trips</Link><Link to="/stats">Stats</Link>
+            {primaryNavigation.map(({ to, label, end }) => <NavLink key={to} to={to} end={end} className={({ isActive }) => isActive ? 'selected' : undefined}>{label}</NavLink>)}
           </nav>
           <div className="dashboard-actions"><Link className="plan-button" to="/trips/new">Plan a new trip</Link></div>
         </header>

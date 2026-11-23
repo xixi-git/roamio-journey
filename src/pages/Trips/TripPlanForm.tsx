@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { ArrowLeft, ImagePlus, MapPin, Plus, Sparkles, Trash2 } from 'lucide-react';
+import { ArrowLeft, Check, ImagePlus, MapPin, Plus, Sparkles, Trash2 } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { createId, createDefaultDates, formatDate, getDateRange, readTripPlans, writeTripPlans } from './tripPlans';
 import type { ItineraryDay, PlanInspiration, TripPlan } from '../../features/trips/types';
 import './trips.css';
 
 const blankInspiration = (): PlanInspiration => ({ id: createId(), kind: 'place', locationName: '', reason: '', imageUrl: '' });
-type LocationResult = { id: number; name: string; country: string; country_code: string; latitude: number; longitude: number; admin1?: string };
+type LocationResult = { id: number; name: string; country?: string; country_code?: string; latitude: number; longitude: number; admin1?: string };
 
 function createDraft(): TripPlan {
   const dates = createDefaultDates();
@@ -28,14 +28,33 @@ function syncItinerary(days: ItineraryDay[], start: string, end: string) {
     : { date, title: `Day ${index + 1}`, morning: '', afternoon: '', evening: '', notes: '' });
 }
 
+function hasValidCoordinates(coordinates?: TripPlan['coordinates']) {
+  return Boolean(coordinates
+    && Number.isFinite(coordinates.lat)
+    && coordinates.lat >= -90
+    && coordinates.lat <= 90
+    && Number.isFinite(coordinates.lon)
+    && coordinates.lon >= -180
+    && coordinates.lon <= 180);
+}
+
+function hasCompleteDestination(plan: TripPlan) {
+  return Boolean(plan.city.trim()
+    && plan.country.trim()
+    && /^[A-Z]{2}$/.test(plan.countryCode)
+    && hasValidCoordinates(plan.coordinates));
+}
+
 export default function TripPlanForm() {
   const { planId } = useParams();
   const navigate = useNavigate();
   const editing = Boolean(planId);
   const [draft, setDraft] = useState<TripPlan>(() => createDraft());
+  const [tagsInput, setTagsInput] = useState('');
   const [placeSelected, setPlaceSelected] = useState(false);
   const [locationResults, setLocationResults] = useState<LocationResult[]>([]);
   const [searchingLocations, setSearchingLocations] = useState(false);
+  const [locationSearchFailed, setLocationSearchFailed] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState('');
 
@@ -44,21 +63,24 @@ export default function TripPlanForm() {
     const plan = readTripPlans().find((item) => item.id === planId);
     if (plan) {
       setDraft(plan);
-      setPlaceSelected(Boolean(plan.coordinates));
+      setTagsInput(plan.tags.join(', '));
+      setPlaceSelected(hasCompleteDestination(plan));
     }
     else setNotFound(true);
   }, [planId]);
 
   useEffect(() => {
     const query = draft.city.trim();
+    setLocationResults([]);
+    setSearchingLocations(false);
+    setLocationSearchFailed(false);
     if (query.length < 2 || placeSelected) {
-      setLocationResults([]);
-      setSearchingLocations(false);
       return;
     }
     const controller = new AbortController();
     const timer = window.setTimeout(async () => {
       setSearchingLocations(true);
+      setLocationSearchFailed(false);
       const params = new URLSearchParams({ name: query, count: '8', language: 'en', format: 'json' });
       if (/^[a-z]{2}$/i.test(draft.countryCode)) params.set('countryCode', draft.countryCode.toUpperCase());
       try {
@@ -67,7 +89,10 @@ export default function TripPlanForm() {
         const result = await response.json() as { results?: LocationResult[] };
         setLocationResults(result.results ?? []);
       } catch {
-        if (!controller.signal.aborted) setLocationResults([]);
+        if (!controller.signal.aborted) {
+          setLocationResults([]);
+          setLocationSearchFailed(true);
+        }
       } finally {
         if (!controller.signal.aborted) setSearchingLocations(false);
       }
@@ -80,6 +105,22 @@ export default function TripPlanForm() {
 
   const days = useMemo(() => getDateRange(draft.start, draft.end), [draft.start, draft.end]);
   const setField = <K extends keyof TripPlan>(key: K, value: TripPlan[K]) => setDraft((current) => ({ ...current, [key]: value }));
+
+  const selectLocation = (location: LocationResult) => {
+    const countryCode = location.country_code?.trim().toUpperCase() ?? '';
+    const coordinates = { lat: location.latitude, lon: location.longitude };
+    if (!location.country?.trim() || !/^[A-Z]{2}$/.test(countryCode) || !hasValidCoordinates(coordinates)) {
+      setError('这个搜索结果缺少有效的国家或坐标信息，请选择其他地点。');
+      return;
+    }
+    setError('');
+    setField('city', location.name);
+    setField('country', location.country);
+    setField('countryCode', countryCode);
+    setField('coordinates', coordinates);
+    setPlaceSelected(true);
+    setLocationResults([]);
+  };
 
   const updateDates = (key: 'start' | 'end', value: string) => setDraft((current) => {
     const next = { ...current, [key]: value };
@@ -99,12 +140,16 @@ export default function TripPlanForm() {
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError('');
-    if (!draft.coordinates) {
-      setError('请选择一个城市搜索结果，自动填写城市坐标后再保存。');
+    if (!placeSelected || !hasCompleteDestination(draft)) {
+      setError('请从城市搜索结果中选择一个地点，确认国家信息和地图坐标。');
       return;
     }
     if (new Date(`${draft.end}T12:00:00`) < new Date(`${draft.start}T12:00:00`)) {
       setError('结束日期需要在开始日期之后。');
+      return;
+    }
+    if (!draft.coverImage.trim()) {
+      setError('请添加旅行封面图片链接后再保存。');
       return;
     }
     const plan = {
@@ -112,7 +157,7 @@ export default function TripPlanForm() {
       city: draft.city.trim(),
       country: draft.country.trim(),
       countryCode: draft.countryCode.trim().toUpperCase(),
-      tags: draft.tags.map((tag) => tag.trim()).filter(Boolean),
+      tags: tagsInput.split(',').map((tag) => tag.trim()).filter(Boolean),
       inspirations: draft.inspirations.filter((item) => item.locationName.trim() || item.reason.trim() || item.imageUrl.trim()),
       itinerary: syncItinerary(draft.itinerary, draft.start, draft.end),
       updatedAt: new Date().toISOString(),
@@ -142,16 +187,21 @@ export default function TripPlanForm() {
           <section className="trip-form-section">
             <div className="trip-section-heading"><span>01</span><div><h2>The destination</h2><p>Give this trip a place, a time, and a little context.</p></div></div>
             <div className="trip-field-grid">
-              <div className="trip-field trip-location-field"><label htmlFor="trip-city"><span>City or region <small>Select a search result to set coordinates</small></span></label><input id="trip-city" required role="combobox" aria-autocomplete="list" aria-expanded={locationResults.length > 0 || searchingLocations} autoComplete="off" value={draft.city} onChange={(event) => { setField('city', event.target.value); setField('country', ''); setField('countryCode', ''); setField('coordinates', undefined); setPlaceSelected(false); }} placeholder="Search a city, e.g. Kyoto" />
-                {draft.city.trim().length >= 2 && !placeSelected && <div className="location-results" role="listbox">{searchingLocations && <p className="location-search-status">Searching places…</p>}{locationResults.map((location) => <button type="button" role="option" aria-selected="false" key={location.id} onClick={() => { setField('city', location.name); setField('country', location.country); setField('countryCode', location.country_code.toUpperCase()); setField('coordinates', { lat: location.latitude, lon: location.longitude }); setPlaceSelected(true); setLocationResults([]); }}><MapPin /><span><strong>{location.name}</strong><small>{[location.admin1, location.country].filter(Boolean).join(', ')}</small></span></button>)}{!searchingLocations && !locationResults.length && <p className="location-search-status">No matching places found.</p>}<small className="location-attribution">Place coordinates by Open-Meteo · GeoNames</small></div>}
+              <div className="trip-field trip-location-field"><label htmlFor="trip-city"><span>City or region <small>Required · choose a result to confirm the map location</small></span></label><input id="trip-city" required role="combobox" aria-autocomplete="list" aria-expanded={draft.city.trim().length >= 2 && !placeSelected} aria-controls="trip-city-results" aria-describedby="trip-location-confirmation" autoComplete="off" value={draft.city} onChange={(event) => { setError(''); setField('city', event.target.value); setField('country', ''); setField('countryCode', ''); setField('coordinates', undefined); setPlaceSelected(false); }} placeholder="Search a city, e.g. Kyoto" />
+                {draft.city.trim().length >= 2 && !placeSelected && <div className="location-results" id="trip-city-results" role="listbox">{searchingLocations && <p className="location-search-status" role="status">Searching places…</p>}{locationResults.map((location) => <button type="button" role="option" aria-selected="false" key={location.id} onClick={() => selectLocation(location)}><MapPin /><span><strong>{location.name}</strong><small>{[location.admin1, location.country].filter(Boolean).join(', ')}</small></span></button>)}{!searchingLocations && !locationResults.length && <p className="location-search-status" role="status">{locationSearchFailed ? 'Could not search places. Check your connection and try again.' : 'No matching places found. Try another spelling.'}</p>}<small className="location-attribution">Place coordinates by Open-Meteo · GeoNames</small></div>}
+                <span className={`location-confirmation ${placeSelected && hasCompleteDestination(draft) ? 'is-confirmed' : ''}`} id="trip-location-confirmation" role="status">
+                  {placeSelected && hasCompleteDestination(draft)
+                    ? <><Check aria-hidden="true" />Location confirmed · {draft.countryCode} · coordinates ready for the home map</>
+                    : 'Choose a search result before saving. Country and coordinates are filled automatically.'}
+                </span>
               </div>
-              <label className="trip-field"><span>Country</span><input required value={draft.country} onChange={(event) => setField('country', event.target.value)} placeholder="e.g. Japan" /></label>
-              <label className="trip-field"><span>Country code <small>ISO 2-letter code</small></span><input maxLength={2} value={draft.countryCode} onChange={(event) => setField('countryCode', event.target.value.toUpperCase())} placeholder="JP" /></label>
-              <label className="trip-field"><span>Trip style <small>Separate with commas</small></span><input value={draft.tags.join(', ')} onChange={(event) => setField('tags', event.target.value.split(','))} placeholder="Food, slow travel, culture" /></label>
-              <label className="trip-field"><span>Departure</span><input required type="date" value={draft.start} onChange={(event) => updateDates('start', event.target.value)} /></label>
-              <label className="trip-field"><span>Return</span><input required type="date" min={draft.start} value={draft.end} onChange={(event) => updateDates('end', event.target.value)} /></label>
+              <label className="trip-field"><span>Country <small>Filled from the selected place</small></span><input className="trip-field-readonly" readOnly value={draft.country} placeholder="Select a city above" /></label>
+              <label className="trip-field"><span>Country code <small>Automatically matched</small></span><input className="trip-field-readonly" readOnly value={draft.countryCode} placeholder="—" /></label>
+              <label className="trip-field"><span>Trip style <small>Separate with commas</small></span><input value={tagsInput} onChange={(event) => setTagsInput(event.target.value)} placeholder="Food, slow travel, culture22" /></label>
+              <label className="trip-field"><span>Departure <small>Required</small></span><input required type="date" value={draft.start} onChange={(event) => updateDates('start', event.target.value)} /></label>
+              <label className="trip-field"><span>Return <small>Required</small></span><input required type="date" min={draft.start} value={draft.end} onChange={(event) => updateDates('end', event.target.value)} /></label>
               <label className="trip-field"><span>Estimated budget <small>USD</small></span><input min="0" type="number" value={draft.budget ?? ''} onChange={(event) => setField('budget', event.target.value ? Number(event.target.value) : null)} placeholder="Optional" /></label>
-              <label className="trip-field"><span>Cover image URL <small>Optional · Unsplash recommended</small></span><input type="url" value={draft.coverImage} onChange={(event) => setField('coverImage', event.target.value)} placeholder="https://images.unsplash.com/…" /></label>
+              <label className="trip-field"><span>Cover image URL <small>Required · use a direct image link</small></span><input required type="url" value={draft.coverImage} onChange={(event) => setField('coverImage', event.target.value)} placeholder="https://images.unsplash.com/…" /></label>
               <label className="trip-field trip-field-wide"><span>What are you hoping this trip feels like?</span><textarea rows={3} value={draft.summary} onChange={(event) => setField('summary', event.target.value)} placeholder="A quiet week of neighborhood walks, good coffee, and time near the water…" /></label>
             </div>
           </section>

@@ -1,25 +1,13 @@
-import { ArrowLeft, ArrowUpRight, Compass, Map, Share2, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Share2, Sparkles } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
 import './SectionPage.css';
 
 const sections = {
-  '/explore': {
-    title: 'Explore',
-    eyebrow: 'FIND YOUR NEXT PLACE',
-    description: 'A little inspiration for the places and journeys waiting just beyond your plans.',
-    icon: Compass,
-  },
   '/shared': {
     title: 'Shared Trips',
     eyebrow: 'TRAVEL IS BETTER TOGETHER',
-    description: 'Trips shared with you and the plans you are building with other travelers will live here.',
+    description: 'Trips created by someone else and shared with you will live here.',
     icon: Share2,
-  },
-  '/stats': {
-    title: 'Travel Stats',
-    eyebrow: 'YOUR JOURNEY SO FAR',
-    description: 'A personal view of the places you have visited, the miles you have traveled, and what is ahead.',
-    icon: Map,
   },
 };
 
